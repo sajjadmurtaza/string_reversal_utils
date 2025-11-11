@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative '../lib/acme'
+
+# Simple CLI for Acme Widget Co basket
+
+# Default catalogue
+products = [
+  Acme::Product.new(code: 'R01', name: 'Red Widget', price: Acme::Money.from_decimal('32.95')),
+  Acme::Product.new(code: 'G01', name: 'Green Widget', price: Acme::Money.from_decimal('24.95')),
+  Acme::Product.new(code: 'B01', name: 'Blue Widget', price: Acme::Money.from_decimal('7.95'))
+]
+
+catalogue = Acme::Catalogue.new(products)
+
+# Default delivery rules
+delivery_rules = Acme::DeliveryRules.new([
+                                           { threshold: Acme::Money.from_decimal('50.00'),
+                                             charge: Acme::Money.from_decimal('4.95') },
+                                           { threshold: Acme::Money.from_decimal('90.00'),
+                                             charge: Acme::Money.from_decimal('2.95') },
+                                           { threshold: nil, charge: Acme::Money.zero }
+                                         ])
+
+# Default offers
+offers = [
+  Acme::Offers::BogoHalf.new(product_code: 'R01', rate: 0.5)
+]
+
+# Create basket
+basket = Acme::Basket.new(
+  catalogue: catalogue,
+  delivery_rules: delivery_rules,
+  offers: offers
+)
+
+# Add products from command line arguments
+if ARGV.empty?
+  puts 'Usage: bin/basket PRODUCT_CODE [PRODUCT_CODE ...]'
+  puts ''
+  puts 'Available products:'
+  catalogue.all.each do |product|
+    puts "  #{product.code} - #{product.name} (#{product.price})"
+  end
+  exit 1
+end
+
+# Add each product
+ARGV.each do |code|
+  basket.add(code)
+  puts "Added: #{code}"
+rescue Acme::UnknownProductError => e
+  puts "Error: #{e.message}"
+  exit 1
+end
+
+# Display total
+puts ''
+puts "Items: #{basket.items.map(&:code).join(', ')}"
+puts "Total: #{basket.total}"

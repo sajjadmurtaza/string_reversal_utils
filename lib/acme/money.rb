@@ -7,6 +7,8 @@ module Acme
   # Handles monetary values with precision using BigDecimal
   # Stores amounts as cents internally to avoid floating point errors
   class Money
+    include Comparable
+
     attr_reader :cents
 
     # @param cents [Integer] amount in cents
@@ -46,15 +48,15 @@ module Acme
 
     # @param multiplier [Numeric]
     # @return [Money]
-    def *(multiplier)
-      result = (BigDecimal(cents.to_s) * BigDecimal(multiplier.to_s)).round.to_i
+    def *(other)
+      result = (BigDecimal(cents.to_s) * BigDecimal(other.to_s)).round.to_i
       Money.new(result)
     end
 
     # @param divisor [Numeric]
     # @return [Money]
-    def /(divisor)
-      result = (BigDecimal(cents.to_s) / BigDecimal(divisor.to_s)).round.to_i
+    def /(other)
+      result = (BigDecimal(cents.to_s) / BigDecimal(other.to_s)).round.to_i
       Money.new(result)
     end
 
@@ -70,27 +72,9 @@ module Acme
     end
 
     # @param other [Money]
-    # @return [Boolean]
-    def <(other)
-      cents < other.cents
-    end
-
-    # @param other [Money]
-    # @return [Boolean]
-    def >(other)
-      cents > other.cents
-    end
-
-    # @param other [Money]
-    # @return [Boolean]
-    def <=(other)
-      cents <= other.cents
-    end
-
-    # @param other [Money]
-    # @return [Boolean]
-    def >=(other)
-      cents >= other.cents
+    # @return [Integer] -1, 0, or 1
+    def <=>(other)
+      cents <=> other.cents
     end
   end
 end
